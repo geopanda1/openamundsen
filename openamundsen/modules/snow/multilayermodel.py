@@ -548,15 +548,22 @@ def _update_layers(
        https://doi.org/10.5194/gmd-8-3867-2015
     """
     max_num_layers = len(min_thickness)
-    num_layers_prev = num_layers.copy()
-    thickness_prev = thickness.copy()
-    ice_content_prev = ice_content.copy()
-    liquid_water_content_prev = liquid_water_content.copy()
-    energy_prev = heat_cap * (temp - c.T0)  # energy content (J m-2)
+    # num_layers_prev = num_layers.copy()
+    # thickness_prev = thickness.copy()
+    # ice_content_prev = ice_content.copy()
+    # liquid_water_content_prev = liquid_water_content.copy()
+    # energy_prev = heat_cap * (temp - c.T0)  # energy content (J m-2)
 
     num_pixels = len(roi_idxs)
     for idx_num in prange(num_pixels):
         i, j = roi_idxs[idx_num]
+
+        # only copy relevant array slices
+        num_layers_prev = num_layers[i, j]
+        thickness_prev = thickness[:, i, j].copy()
+        ice_content_prev = ice_content[:, i, j].copy()
+        liquid_water_content_prev = liquid_water_content[:, i, j].copy()
+        energy_prev = heat_cap * (temp[:, i, j] - c.T0)  # energy content (J m-2)
 
         num_layers[i, j] = 0
         thickness[:, i, j] = 0.
@@ -589,27 +596,32 @@ def _update_layers(
             k_new = 0
 
             # TODO optimize this loop
-            for k_old in range(num_layers_prev[i, j]):
+            for k_old in range(num_layers_prev):
                 while True:  # TODO replace with normal loop
-                    weight = min(new_thickness / thickness_prev[k_old, i, j], 1.)
+                    weight = min(new_thickness / thickness_prev[k_old], 1.)
 
-                    ice_content[k_new, i, j] += weight * ice_content_prev[k_old, i, j]
-                    liquid_water_content[k_new, i, j] += weight * liquid_water_content_prev[k_old, i, j]
-                    internal_energy[k_new] += weight * energy_prev[k_old, i, j]
+                    ice_content[k_new, i, j] += weight * ice_content_prev[k_old]
+                    liquid_water_content[k_new, i, j] += weight * liquid_water_content_prev[k_old]
+                    internal_energy[k_new] += weight * energy_prev[k_old]
 
                     if weight == 1.:
-                        new_thickness -= thickness_prev[k_old, i, j]
+                        new_thickness -= thickness_prev[k_old]
                         break
-
-                    thickness_prev[k_old, i, j] *= 1 - weight
-                    ice_content_prev[k_old, i, j] *= 1 - weight
-                    liquid_water_content_prev[k_old, i, j] *= 1 - weight
-                    energy_prev[k_old, i, j] *= 1 - weight
 
                     k_new += 1
-
+                    # move up, *_prev variables will not be reused
                     if k_new >= ns:
                         break
+
+                    thickness_prev[k_old] *= 1 - weight
+                    ice_content_prev[k_old] *= 1 - weight
+                    liquid_water_content_prev[k_old] *= 1 - weight
+                    energy_prev[k_old] *= 1 - weight
+
+                    # k_new += 1
+
+                    # if k_new >= ns:
+                    #     break
 
                     if weight < 1:
                         new_thickness = thickness[k_new, i, j]
