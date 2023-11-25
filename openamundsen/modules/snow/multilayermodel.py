@@ -563,7 +563,7 @@ def _update_layers(
         thickness_prev = thickness[:, i, j].copy()
         ice_content_prev = ice_content[:, i, j].copy()
         liquid_water_content_prev = liquid_water_content[:, i, j].copy()
-        energy_prev = heat_cap * (temp[:, i, j] - c.T0)  # energy content (J m-2)
+        energy_prev = heat_cap[:, i, j] * (temp[:, i, j] - c.T0)  # energy content (J m-2)
 
         num_layers[i, j] = 0
         thickness[:, i, j] = 0.
