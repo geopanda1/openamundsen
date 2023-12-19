@@ -4,11 +4,11 @@ import numpy as np
 from openamundsen import errors
 
 _DTYPE_INIT_VALS = {
-    float: np.nan,
+    np.float32: np.nan,
     int: 0,
     bool: False,
 }
-_DTYPE_INIT_VALS[np.dtype('float64')] = _DTYPE_INIT_VALS[float]
+_DTYPE_INIT_VALS[np.dtype('float64')] = _DTYPE_INIT_VALS[np.float32]
 _DTYPE_INIT_VALS[np.dtype('int64')] = _DTYPE_INIT_VALS[int]
 
 
@@ -164,7 +164,7 @@ class StateVariableContainer(Munch):
             units=None,
             long_name=None,
             standard_name=None,
-            dtype=float,
+            dtype=np.float32,
             dim3=0,
             retain=False,
     ):
@@ -248,7 +248,7 @@ class StateVariableDefinition:
     units: str = None
     long_name: str = None
     standard_name: str = None
-    dtype: type = float
+    dtype: type = np.float32
     dim3: int = 0
     retain: bool = False
 
